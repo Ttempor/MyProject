@@ -13,7 +13,7 @@ void main() {
 	for(int i1 = 0; i1 < 9; i1++) {
 		for(int j1 = 0; j1 < 10; j1++) {
 			array[i1][j1] = a--;
-			printf("%d   ", array[i1][j1]);
+			printf(".2%d   ", array[i1][j1]);
 		}
 		printf("\n");
 	}
