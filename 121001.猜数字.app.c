@@ -2,6 +2,7 @@
 #include<string.h>
 void hec(int v ,int u);
 void main() {
+	char temp;
 	char secret[] = "一二三四五";
 	int a;
 	int b = 5;
@@ -16,7 +17,11 @@ void main() {
 	}
 	for(;;) {
 		printf("输入在0   ~  20\n");
-		scanf("%d", &a);
+		if(!scanf("%d", &a)) {
+			scanf("%c", &temp);
+			printf("请输入数字\n");
+			continue;
+		}
 		if (a == b) {
 			printf("答对了,你太厉害了，答案是%d\n", b);
 			break;
@@ -34,3 +39,4 @@ void main() {
 //2.内置一个整型数字答案，比如答案为15，答案数字为1-20之间的数字都可以。
 //3.用户回答太大或者太小都会提示，使用循环语句，直到猜正确为止。
 //4.如果回答正确，显示“你太厉害了”类似字样。
+
