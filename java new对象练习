@@ -1,0 +1,637 @@
+/*   java的第二个练习小项目终于写好了，本次使用项目使用idea写的
+*    用了面向对象的知识，一开始看起来挺简单，没想到写起来其实挺难的，特别是写控制台输入那块的代码
+*    可能在下个礼拜做第三个小项目的练习，会用到继承，重写，接口，抽象等目前没用过的知识， 不然就继续学习多线程（这玩意真难，吓得我回头写这个项目逃避学习，这个学期还是学几个关键字就得了，
+*    虽然推脱，但是迟早要学完滴）为了对多线程更深的了解，打算寒假看一下这个（https://www.bilibili.com/video/BV1eK4y1E74F?p=5）,也打算寒假玩2077 QWQ
+*    还有别的，比如集合，泛型，io，反射什么什么的，看着就难，感觉还是先把第三个复习的项目写了再说→_→
+*    java面向对象的个人总结 
+*    {
+*        类拥有 -> 属性，方法，构造器，代码块，内部类
+*        相关的关键字 —> 三个权限修饰符 this super static final extends abstract implements inteface
+*        类的属性调用 —> 如果是多态，调用属性要看调用者的类型； a方法调用b属性，b属性一定是b属性，但是调用a方法，不一定是a方法，a方法可能会被重写
+*        接口里有四种东东，分别是：全局常量，抽象方法，静态方法，默认方法
+*        abstract和final冲突
+*        不写了，睡觉QWQ ，2020年12月12日 星期六 农历十月廿八 01:35:5
+*    }
+
+
+
+
+import java.util.Scanner;
+
+public class Test {
+    public static void main(String[] args) {
+        CustomerView e = new CustomerView(new CustomrControl(10));
+        e.mainView();
+    }
+}
+
+class Customer {
+    public Customer() {
+
+    }
+
+    public Customer(String name, String gender, int age, String phone, String email) {
+        this.name = name;
+        this.gender = gender;
+        this.age = age;
+        this.phone = phone;
+        this.email = email;
+    }
+
+    /**
+     * 姓名
+     */
+    private String name;
+    /**
+     * 性别
+     */
+    private String gender;
+    /**
+     * 年龄
+     */
+    private int age;
+    /**
+     * 电话号码
+     */
+    private String phone;
+    /**
+     * 邮箱
+     */
+    private String email;
+
+    public String getName() {
+        return name;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+}
+
+class CustomerView {
+    CustomrControl customrControl;
+
+    /**
+     * 构造器初始化，传入要控制的客户组
+     */
+    CustomerView(CustomrControl customrControl) {
+        this.customrControl = customrControl;
+    }
+
+    public void mainView() {
+        int selectInt = 0;
+        while (true) {
+            menu();
+            select();
+            selectInt = InputTool.scannerSelect();
+            switch (selectInt) {
+                case 1: {
+                    if (customrControl.addCustomer(new Customer(InputTool.scannerCreate(), InputTool.scannerCreate()
+                            , Integer.valueOf(InputTool.scannerGetAge(true)), InputTool.scannerCreate(), InputTool.scannerCreate()))) {
+                        System.out.println("增加成功，目前客户数为 " + customrControl.getTotal());
+                    } else {
+                        System.out.println("未知原因导致增加失败");
+                    }
+//                    System.out.println("debug 1增加");
+                    break;
+                }
+                case 2: {
+                    if (customrControl.updateCustomer(InputTool.scannerUpdate(customrControl.getTotal()))) {
+                        System.out.println("修改成功");
+                    } else {
+                        System.out.println("修改失败");
+                    }
+//                  System.out.println("debug 2修改");
+                    break;
+                }
+                case 3: {
+                    System.out.println("请输入整数 1 ~ " + customrControl.getTotal() + "之内以删除客户");
+                    if (!customrControl.deleteCustomer(InputTool.scannerDeleteCustomer(customrControl.getTotal()))) {
+                        System.out.println("某种未知原因,导致删除失败");
+                    } else {
+                        System.out.println("删除成功");
+                    }
+                    break;
+                }
+                case 4: {
+                    if (!customrControl.retrieveCustomer()) {
+                        System.out.println("查询失败");
+                    }
+                    break;
+                }
+                case 5: {
+                    System.out.println("退出成功");
+                    return;
+                }
+            }
+
+        }
+    }
+
+    public void menu() {
+        System.out.println("             -----------------客户信息管理软件-----------------\n");
+        System.out.println("                              1 添 加 客 户");
+        System.out.println("                              2 修 改 客 户");
+        System.out.println("                              3 删 除 客 户");
+        System.out.println("                              4 客 户 列 表");
+        System.out.println("                              5 退      出\n");
+    }
+
+    public void select() {
+        System.out.print("                              请选择(1-5)：");
+    }
+}
+
+class CustomrControl {
+
+    /**
+     * 客户总数（非数组长度）
+     */
+    private int total = 0;
+    Customer[] customer;
+
+    /**
+     * 获得客户组内保存有的客户数（非数组长度）
+     *
+     * @return
+     */
+    public int getTotal() {
+        return total;
+    }
+
+    /**
+     * 构造器指定客户组的最大人数
+     */
+    CustomrControl(int length) {
+        customer = new Customer[length];
+        customer[0] = new Customer("屠董", "男", 2, "33", "22");
+        customer[1] = new Customer("飞洒发生", "男", 2, "33", "22");
+        customer[2] = new Customer("麻花疼", "男", 22, "3fsda3", "2fsa2");
+        customer[3] = new Customer("叽里呱啦", "男", 2, "3fasd3", "2fdsa2");
+        customer[4] = new Customer("ea`fsde", "男", 2, "3fasd3", "22");
+        customer[5] = new Customer("ee2`1", "男", 2, "33", "22");
+        total = 6;
+    }
+
+    //CRUD
+    //CRUD分别指增加(Create) 、读取查询(Retrieve)、 更新(Update) 和删除(Delete)
+
+    /**
+     * (Create)增加客户  增加成功返回true  增加失败返回false
+     */
+    public boolean addCustomer(Customer customer) {
+        if (total < this.customer.length) {
+            this.customer[total++] = customer;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * (Delete))删除客户  删除成功返回true  删除失败返回false
+     */
+    public boolean deleteCustomer(int who) {
+        if (who > total || total == 0) {
+            return false;
+        }
+        for (; who < total; who++) {
+            customer[who - 1] = customer[who];
+        }
+        customer[--total] = null;
+        return true;
+    }
+
+    /**
+     * (Update)更改客户信息  更改成功返回true  更改失败返回false
+     */
+    public boolean updateCustomer(int who) {
+        if (who > total || total == 0) {
+            return false;
+        }
+        String t = InputTool.case0(false);
+        if (t == "密码正确，不需要该值") {
+        } else {
+            customer[who - 1].setName(t);
+        }
+
+        t = InputTool.case1(false);
+        if (t == "密码正确，不需要该值") {
+        } else {
+            customer[who - 1].setGender(t);
+        }
+
+        t = InputTool.scannerGetAge(false);
+        if (t == "密码正确，不需要该值") {
+        } else {
+            customer[who - 1].setAge(5);
+        }
+
+        t = InputTool.case2(false);
+        if (t == "密码正确，不需要该值") {
+        } else {
+            customer[who - 1].setPhone(t);
+        }
+
+        t = InputTool.case3(false);
+        if (t == "密码正确，不需要该值") {
+        } else {
+            customer[who - 1].setEmail(t);
+        }
+
+        return true;
+    }
+
+
+    /**
+     * (Retrieve)查询客户信息  查询成功返回true  查询失败返回false
+     */
+    public boolean retrieveCustomer() {
+        String t = "";
+        int error = -1;
+        if (total <= 0) {
+            System.out.println("查询失败，原因：未找到客户");
+            return true;
+        }
+        System.out.println("\n-------------------------------------客户列表-------------------------------------");
+        System.out.println("编号" + "\t\t\t" + "姓名" + "\t\t\t" + "性别" + "\t\t\t" + "年龄" + "\t\t\t"
+                + "电话" + "\t\t\t" + "邮箱");
+
+        //若出错则抓异常，好让我知道哪里错
+        try {
+            for (int i = 0; i < total; i++) {
+                error = i;
+
+                //方法一，不会出现信息不对齐的情况，但代码冗余
+                stringFormat(String.valueOf(i + 1));
+                stringFormat(customer[i].getName());
+                stringFormat(customer[i].getGender());
+                stringFormat(String.valueOf(customer[i].getAge()));
+                stringFormat(customer[i].getPhone());
+                stringFormat(customer[i].getEmail());
+                System.out.println();
+
+                //方法二  会出现信息输出不对齐的情况
+                //    System.out.println(String.valueOf(i + 1) + "\t\t\t" + customer[i].getName() + "\t\t\t"
+                //           + customer[i].getGender() + "\t\t\t" + customer[i].getAge() + "\t\t\t"
+                //           + customer[i].getPhone() + "\t\t\t" + customer[i].getEmail());
+            }
+        } catch (NullPointerException e) {
+            System.out.println("查询时出错，空指针错误,在 customer[" + error + "] 位置没有对象");
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.out.println("查询时出错，数组角标越界");
+        } catch (Exception e) {
+            System.out.println("查询时出现未知错误");
+        }
+        System.out.println("------------------------------------客户列表完成-------------------------------------\n");
+        return true;
+    }
+
+
+    /**
+     * 将客户的信息格式化输出，防止上方的 (方式二) 会出现不对齐的情况，但若是有中文，还是会有稍微的不对齐，暂未找到更好的方法
+     *
+     * @param s
+     */
+    private void stringFormat(String s) {
+        int a = 0;
+        int b = 0;
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) > 128 || s.charAt(i) < 0) {
+                a += 1;
+                if (b == 0) {
+                    b = 1;
+                }
+            }
+        }
+        //上面的for检测中文，若有中文，则下面的for少添加一个空格
+        for (; ; ) {
+            if (s.length() <= 15 - a + b) {
+                s = s + " ";
+                continue;
+            }
+            System.out.print(s);
+            return;
+        }
+    }
+
+}
+
+class InputTool {
+    private static Scanner scanner = new Scanner(System.in);
+    private static int i = 0;
+    //  String name, String gender, int age, String phone, String email;
+
+    /**
+     * 获得一个岁数
+     *
+     * @return
+     */
+    public static String scannerGetAge(boolean bool) {
+        System.out.print("请输入整数以代表岁数，岁数范围在1~100之间:");
+        String t = "";
+        int temp = -5;
+        for (; ; ) {
+            try {
+                if (!bool) {
+                    t = readKeyboard(3, "请输入整数以代表岁数，岁数范围在1~100之间", true);
+                    if (t == "密码正确，不需要该值") {
+                        return "密码正确，不需要该值";
+                    }
+                    boolean bool1 = true;
+                    for (int i = 0; i < t.length(); i++) {
+                        if (t.charAt(i) > 57 || t.charAt(i) < 48) {
+                            bool1 = false;
+                            break;
+                        }
+                    }
+                    if (!bool1) {
+                        continue;
+                    }
+                    temp = Integer.parseInt(t);
+                } else {
+                    temp = scanner.nextInt();
+                    t = scanner.nextLine();
+                }
+
+            } catch (Exception e) {
+                System.out.println("未知原因，抛出了异常，需要来这里修改代码");
+                scanner.nextLine();//若输入了字母，则会无限循环，这里是吃掉有字母的情况，以防止无限循环
+            }
+            if (temp <= 0) {
+                System.out.println("请输入数字0以上，岁数范围在1~100之间");
+                continue;
+            } else if (temp > 100) {
+                System.out.println("请输入数字100以内，岁数范围在1~100之间");
+                continue;
+            }
+            return String.valueOf(temp);
+        }
+
+    }
+
+    /**
+     * 增
+     * 增加一个客户
+     *
+     * @return
+     */
+    public static String scannerCreate() {
+        if (i >= 4 || i < 0) {
+            i = 0;
+        }
+        switch (i) {
+            case 0: {
+                return case0(true);
+            }
+            case 1: {
+                return case1(true);
+            }
+
+            case 2: {
+                return case2(true);
+            }
+            case 3: {
+                return case3(true);
+            }
+            default: {
+                System.out.println("未知错误，导致返回默认值");
+                return "错误名字";
+            }
+        }
+    }
+
+    public static String case0(boolean bool) {
+        String temp = "";
+        System.out.print("请输入姓名,可以瞎写:");
+        i++;
+        if (!bool) {
+            temp = readKeyboard(10, "姓名被限制在10个字以内,请重新输入:", true);
+            if (temp == "密码正确，不需要该值") {
+                return temp;
+            }
+            return temp;
+        }
+        return readKeyboard(10, "姓名被限制在10个字以内,请重新输入:");
+    }
+
+    public static String case1(boolean bool) {
+        String temp = "";
+        System.out.print("请输入性别<男>或<女>:");
+        i++;
+        for (; ; ) {
+            if (!bool) {
+                temp = readKeyboard(1, "请输入‘男’或‘女’:", true);
+                if (temp == "密码正确，不需要该值") {
+                    return "密码正确，不需要该值";
+                }
+            } else {
+                temp = readKeyboard(1, "请输入‘男’或‘女’:");
+            }
+            if (temp.charAt(0) == '男' || temp.charAt(0) == '女') {
+                return temp;
+            }
+            System.out.print("请输入‘男’或‘女’:");
+        }
+    }
+
+    public static String case2(boolean bool) {
+
+        String temp = "";
+        System.out.print("请输入电话:");
+        i++;
+        for (; ; ) {
+            if (!bool) {
+                temp = readKeyboard(11, "手机号码被限制在11位以内,请重新输入数字:", true);
+                if (temp == "密码正确，不需要该值") {
+                    return "密码正确，不需要该值";
+                }
+            } else {
+                temp = readKeyboard(11, "手机号码被限制在11位以内,请重新输入数字:");
+            }
+            if (temp.charAt(0) != '1') {
+                System.out.print("手机号码必须是1开头 -> ");
+                continue;
+            } else if (temp.length() != 11) {
+                System.out.print("手机号码要求是11位数字 -> ");
+                continue;
+            }
+            boolean bool1 = true;
+            for (int i = 0; i < temp.length(); i++) {
+                if (temp.charAt(i) < 48 || temp.charAt(i) > 57) {
+                    System.out.print("手机号码要求是11位数字 -> ");
+                    bool1 = false;
+                    break;
+                }
+            }
+            if (bool1) {
+                return temp;
+            }
+        }
+    }
+
+    public static String case3(boolean bool) {
+        String temp = "";
+        System.out.print("邮箱,随便写吧,不做限制:");
+        i++;
+        if (!bool) {
+            temp = readKeyboard(15, "邮箱填写不能超过15个字，请重写输入:", true);
+            if (temp == "密码正确，不需要该值") {
+                return "密码正确，不需要该值";
+            }
+            return temp;
+        }
+        return readKeyboard(15, "邮箱填写不能超过15个字，请重写输入:");
+    }
+
+    /**
+     * 删
+     * 返回要删除指定客户的位置，返回值不对应元素下标,需减一
+     *
+     * @param length
+     * @return
+     */
+    public static int scannerDeleteCustomer(int length) {
+        String temp;
+        int tempInt = 0;
+        while (true) {
+            temp = readKeyboard((length < 10) ? 1 : 2, "请输入整数在 1 ~ " + length + "之内才能以删除客户");
+            try {
+                tempInt = Integer.parseInt(temp);
+            } catch (Exception e) {
+                System.out.println("请输入整数在 1 ~ " + length + "之内才能以删除客户");
+                continue;
+            }
+            if (0 < tempInt && tempInt <= length) {
+                return tempInt;
+            }
+            System.out.println("请输入整数在 1 ~ " + length + "之内才能以删除客户");
+        }
+    }
+
+    /**
+     * 改
+     * 返回需要需改的客户位置
+     */
+    public static int scannerUpdate(int length) {
+        System.out.println("请输入整数在 1 ~ " + length + "之内才能够修改客户");
+        String temp;
+        int tempInt = 0;
+        while (true) {
+            temp = readKeyboard((length < 10) ? 1 : 2, "请输入整数在 1 ~ " + length + "之内才能够修改客户");
+            try {
+                tempInt = Integer.parseInt(temp);
+            } catch (Exception e) {
+                System.out.println("请输入整数在 1 ~ " + length + "之内才能够修改客户");
+                continue;
+            }
+            if (0 < tempInt && tempInt <= length) {
+                return tempInt;
+            }
+            System.out.println("请输入整数在 1 ~ " + length + "之内才能够修改客户");
+        }
+    }
+
+    /**
+     * 获得1到5之间的整数
+     *
+     * @return
+     */
+    public static int scannerSelect() {
+        String temp;
+        while (true) {
+            temp = readKeyboard(1, "请输入整数 1 ~ 5");
+            if (temp.charAt(0) == '1' || temp.charAt(0) == '2' || temp.charAt(0) == '3'
+                    || temp.charAt(0) == '4' || temp.charAt(0) == '5') {
+                int tempInt = 0;
+                /**
+                 * 防止输入单个字母，虽然上面if的()里面已经解决了问题，可我是写完try catch才知道()里面已经解决了。。。
+                 */
+                try {
+                    tempInt = Integer.parseInt(String.valueOf(temp.charAt(0)));
+                } catch (Exception e) {
+                    System.out.println("请输入整数 1 ~ 5");
+                    continue;
+                }
+                return tempInt;
+            }
+            System.out.println("请输入整数 1 ~ 5");
+        }
+    }
+
+    private static String readKeyboard(int limitLength, String describe) {
+        String temp = "";
+
+        //Scanner.hasNextLine() 检测下一行有没有输入
+        while (scanner.hasNextLine()) {
+
+            //nextLine() 把指针移动到下一行 让然后取出当前这一行的输入
+            temp = scanner.nextLine();
+//            System.out.println("temp的长度是" + temp.length());
+            if (temp.length() >= 15) {
+                System.out.print("硬性规定，输入长度要在15个字之内,请重新输入：");
+                continue;
+            } else if (temp.length() <= 0 || temp.length() > limitLength) {
+                System.out.print(describe);
+                continue;
+            }
+            break;
+        }
+        return temp;
+    }
+
+    private static String readKeyboard(int limitLength, String describe, boolean bool) {
+        String temp = "";
+
+        //Scanner.hasNextLine() 检测下一行有没有输入
+        while (scanner.hasNextLine()) {
+
+            //nextLine() 把指针移动到下一行 让然后取出当前这一行的输入
+            temp = scanner.nextLine();
+            if (temp.length() == 0) {
+                return "密码正确，不需要该值";
+            }
+//            System.out.println("temp的长度是" + temp.length());
+            if (temp.length() >= 15) {
+                System.out.print("硬性规定，输入长度要在15个字之内,请重新输入：");
+                continue;
+            } else if (temp.length() < 0 || temp.length() > limitLength) {
+                System.out.print(describe);
+                continue;
+            }
+            break;
+        }
+        return temp;
+    }
+}
