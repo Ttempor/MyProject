@@ -2,8 +2,7 @@ import java.util.Scanner;
 
 public class Test {
     public static void main(String[] args) {
-        CustomerView e = new CustomerView(new CustomrControl(10));
-        e.mainView();
+        new CustomerView(new CustomrControl(10)).mainView();       
     }
 }
 
