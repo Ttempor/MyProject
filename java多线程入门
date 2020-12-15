@@ -1,0 +1,152 @@
+//每开启一个多线程，都需要new一个Thread类的对象，然后通过调用该对象的start()方法才能开启新的线程
+//多线程开启方法1：继承Thread类，将多线程要执行的代码重写在Thread类的run()方法中, 然后调用该继承类对象的start()方法
+//多线程开启方法2：实现Runnable接口中的run()方法，将多线程要执行的代码写在该run()方法中，最后把该实现类的对象作为Thread类的构造器参数，以此传入Thread类的对象中，然后调用Thread类对象的start()方法
+//多线程开启方法3：实现Callable接口中的call()方法，将多线程要执行的代码写在该call()方法中，把该实现类的对象作为FutrueTask类的构造器参数，以此传入FutureTask类的对象中，
+//                                              把该FutrueTask类的对象作为Threadk类的构造器参数，以此传入Thread类的对象中，然后调用Thread类对象的start()方法
+//多线程开启方法4：待补充
+
+
+//Thread类中常用的方法：start(), static.sleep(), static.yield(), join(), getName(), setName(), (static.currentThread()静态方法，用来获取当前线程)
+//(static.holdsLock(Object obj)返回当前执行的线程是否持有指定对象的锁)，剩下的百度。。。
+
+
+//如何解决线程的安全问题：
+//关键字：synchornized -> 可以修饰方法，或者包起一段代码。
+//synchronized 需要一把锁。                                                                                        因为一个对象只能拿一把锁。
+//修饰方法时，锁是该方法所属的对象，若方法是静态的，则锁是该方法所属的类。当一个类中有两个方法使用关键字synchronized修饰时，同一个对象在多线程中不能同时执行synchronized修饰的方法。
+//包代码时，锁要自己给，写法为synchronized(锁){};
+//修饰方法时，方法执行完锁自动释放，包代码时，执行完包住的代码锁自动释放
+
+//关键字: volatile -> 修饰属性，不适用于非原子操作，如++ 等运算。
+
+//ReentrantLock类对象，使用该对象的lock()方法进行上锁，锁用调lock()方法的对象充当，需要手动调用unlock()释放锁。ReentrantLock的构造器有个Boolean型的参数，不写默认为fasle，代表是不公平的锁。
+
+//Object类中有wait(),notify(),notifyAll()三个方法，是可以用来进行不同线程间的通信的
+
+
+
+
+
+//相关例子 ↓
+
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class ThreadExtends {
+    public static Object object = new Object();
+    //创一个静态的锁，锁是ThreadExtends.class               //fair：表示是否是公平锁,若不写，默认为false
+    public static ReentrantLock lock = new ReentrantLock();
+    //volatile关键字不适用于非原子操作，如testInt++,testInt += 1等
+    public static volatile int testInt1 = 0;
+    public static volatile int testInt2 = 0;
+    public static void main(String[] args) {
+        //新特性，实现runnable接口，用Thread.start()开启多线程
+        new Thread(()-> {
+            for (int i = 0; i < 5; i++) {
+                System.out.println("jdk 8 ? Runnable?");
+            }
+        }).start();
+
+        //继承Thread类，重写run()方法，用Thread.start()开启多线程
+        new ThreadExtendsTest().start();
+
+        //实现runnable接口，重写run()方法，作为对象传入Thread对象，用Thread.start()开启多线程
+        new Thread(new ThreadImplementsRunnable()).start();
+
+        //实现Callable接口，将实现类对象作为参数，传入FutureTask对象的构造器，
+        //将FutureTask对象作为参数，传入Thread对象的构造器,用Thread.start()开启多线程
+        ThreadImplementsCallable callable = new ThreadImplementsCallable();
+        FutureTask f = new FutureTask(callable);
+//        new Thread(f).start();
+//        new Thread(new FutureTask(callable)).start();
+        Callable c =   new Callable() {
+            @Override
+            public synchronized Object call() throws Exception {
+                for (int i = 0; i < 10; i++) {
+                    Thread.sleep(100);
+                System.out.println(Thread.currentThread().getName() + " synchronize方法 " + ThreadExtends.testInt2++);
+            }
+                return 1;
+            }
+        };
+        new Thread(new FutureTask(c)).start();
+        new Thread(new FutureTask(new ThreadImplementsCallable1())).start();
+
+
+
+        Integer obj = 1;
+        try {
+            System.out.println("ee");
+
+            //若f没有被放进Thread里面start，是不会有返回值的，没有返回值就会导致调用FutrueTask.get()的线程进入阻塞状态
+            obj = (Integer)(f.get());
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+
+        }
+        System.out.println(obj);
+    }
+}
+
+class ThreadExtendsTest extends Thread {
+    @Override
+    public void run() {
+        for (int i = 0; i < 5; i++) {
+            try {
+                sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+//synchronized来实现同步，可以在不同的方法内用同一个锁.
+            synchronized(ThreadExtends.object){
+                System.out.println("thread?     " + ThreadExtends.testInt1++);
+            }
+        }
+    }
+}
+
+class ThreadImplementsRunnable implements Runnable {
+    @Override
+    public void run() {
+        for (int i = 0; i < 5; i++) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            synchronized(ThreadExtends.object) {
+                System.out.println("Runnable?   " + ThreadExtends.testInt1++);
+            }
+        }
+    }
+}
+
+class ThreadImplementsCallable implements Callable {
+    int a = 0;
+    public Object call () {
+        for (int i = 0; i < 3; i++) {
+
+            //用ReentrantLock.lock()上锁，要求锁是同一把锁才能达到有效的目的
+            ThreadExtends.lock.lock();
+            System.out.println(Thread.currentThread().getName() + "  Callable" + a++);
+
+            //用ReentrantLock.unlock()解锁，要求锁是同一把锁才能达到有效的目的
+            ThreadExtends.lock.unlock();
+        }
+        return 2;
+    }
+}
+
+class ThreadImplementsCallable1 implements Callable {
+    public synchronized Object call() throws Exception {
+        for (int i = 0; i < 20; i++) {
+            Thread.sleep(100);
+            System.out.println(Thread.currentThread().getName() + " synchronize方法 " + ThreadExtends.testInt2++);
+        }
+        return 1;
+    }
+}
