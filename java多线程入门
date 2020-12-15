@@ -60,8 +60,8 @@ public class ThreadExtends {
         //将FutureTask对象作为参数，传入Thread对象的构造器,用Thread.start()开启多线程
         ThreadImplementsCallable callable = new ThreadImplementsCallable();
         FutureTask f = new FutureTask(callable);
-//        new Thread(f).start();
-//        new Thread(new FutureTask(callable)).start();
+        new Thread(f).start();
+        new Thread(new FutureTask(callable)).start();
         Callable c =   new Callable() {
             @Override
             public synchronized Object call() throws Exception {
