@@ -2,9 +2,10 @@
 //每开启一个多线程，都需要new一个Thread类的对象，然后通过调用该对象的start()方法才能开启新的线程
 //多线程开启方法1：继承Thread类，将多线程要执行的代码重写在Thread类的run()方法中, 然后调用该继承类对象的start()方法
 //多线程开启方法2：实现Runnable接口中的run()方法，将多线程要执行的代码写在该run()方法中，最后把该实现类的对象作为Thread类的构造器参数，以此传入Thread类的对象中，然后调用Thread类对象的start()方法
-//多线程开启方法3：实现Callable接口中的call()方法，将多线程要执行的代码写在该call()方法中，把该实现类的对象作为FutrueTask类的构造器参数，以此传入FutureTask类的对象中，
-//   似乎比Runnbale牛逼 ↙                           把该FutrueTask类的对象作为Threadk类的构造器参数，以此传入Thread类的对象中，然后调用Thread类对象的start()方法。
-//多线程开启方法4：待补充
+//多线程开启方法3：实现Callable接口中的call()方法，将多线程要执行的代码写在该call()方法中，把该实现类的对象作为FutureTask类的构造器参数，以此传入FutureTask类的对象中，
+//似乎比Runnbale牛逼 ↙                           把该FutureTask类的对象作为Threadk类的构造器参数，以此传入Thread类的对象中，然后调用Thread类对象的start()方法。
+//Callable是泛型的，call()方法有返回值，返回值是Object类型。可以用FutureTask.get()方法获取返回值，该方法若没有获得返回值，即call()没有return的情况下，会造成线程阻塞。
+//多线程开启方法4：线程池
 
 
 //Thread类中常用的方法：start(), static.sleep(), static.yield(), join(), getName(), setName(), (static.currentThread()静态方法，用来获取当前线程)
@@ -23,6 +24,7 @@
 //ReentrantLock类对象，使用该对象的lock()方法进行上锁，锁用调lock()方法的对象充当，需要手动调用unlock()释放锁。ReentrantLock的构造器有个Boolean型的参数，不写默认为fasle，代表是不公平的锁。
 
 //Object类中有wait(),notify(),notifyAll()三个方法，是可以用来进行不同线程间的通信的，例子 -> 生产者消费者的问题
+//上面三种方法是放在synchronized里面才能调用，而且只能用synchronized的锁（A锁）来调用，A锁调用wait()后自动释放锁，notify()随机唤醒一个被A锁wait()的线程。notifyAll()唤醒全部线程。
 
 
 
@@ -37,14 +39,17 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class ThreadExtends {
     public static Object object = new Object();
+    public static Object object1 = new Object();
     //创一个静态的锁，锁是ThreadExtends.class               //fair：表示是否是公平锁,若不写，默认为false
     public static ReentrantLock lock = new ReentrantLock();
     //volatile关键字不适用于非原子操作，如testInt++,testInt += 1等
     public static volatile int testInt1 = 0;
     public static volatile int testInt2 = 0;
+    public static volatile int testInt3 = 0;
+
     public static void main(String[] args) {
         //新特性，实现runnable接口，用Thread.start()开启多线程
-        new Thread(()-> {
+        new Thread(() -> {
             for (int i = 0; i < 5; i++) {
                 System.out.println("jdk 8 ? Runnable?");
             }
@@ -62,19 +67,20 @@ public class ThreadExtends {
         FutureTask f = new FutureTask(callable);
         new Thread(f).start();
         new Thread(new FutureTask(callable)).start();
-        Callable c =   new Callable() {
+        Callable c = new Callable() {
             @Override
             public synchronized Object call() throws Exception {
-                for (int i = 0; i < 10; i++) {
+                for (int i = 0; i < 5; i++) {
                     Thread.sleep(100);
-                System.out.println(Thread.currentThread().getName() + " synchronize方法 " + ThreadExtends.testInt2++);
-            }
+                    System.out.println(Thread.currentThread().getName() + " synchronize方法 " + ThreadExtends.testInt2++);
+                }
                 return 1;
             }
         };
+
+        //输出同样的句子，锁的对象不同，无法同步
         new Thread(new FutureTask(c)).start();
         new Thread(new FutureTask(new ThreadImplementsCallable1())).start();
-
 
 
         Integer obj = 1;
@@ -82,13 +88,22 @@ public class ThreadExtends {
             System.out.println("ee");
 
             //若f没有被放进Thread里面start，是不会有返回值的，没有返回值就会导致调用FutrueTask.get()的线程进入阻塞状态
-            obj = (Integer)(f.get());
+            obj = (Integer) (f.get());
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
 
         }
         System.out.println(obj);
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        new Thread(new FutureTask(new Thread1())).start();
+        new Thread(new Thread2()).start();
     }
 }
 
@@ -103,7 +118,7 @@ class ThreadExtendsTest extends Thread {
             }
 
 //synchronized来实现同步，可以在不同的方法内用同一个锁.
-            synchronized(ThreadExtends.object){
+            synchronized (ThreadExtends.object) {
                 System.out.println("thread?     " + ThreadExtends.testInt1++);
             }
         }
@@ -119,7 +134,7 @@ class ThreadImplementsRunnable implements Runnable {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            synchronized(ThreadExtends.object) {
+            synchronized (ThreadExtends.object) {
                 System.out.println("Runnable?   " + ThreadExtends.testInt1++);
             }
         }
@@ -128,7 +143,8 @@ class ThreadImplementsRunnable implements Runnable {
 
 class ThreadImplementsCallable implements Callable {
     int a = 0;
-    public Object call () {
+
+    public Object call() {
         for (int i = 0; i < 3; i++) {
 
             //用ReentrantLock.lock()上锁，要求锁是同一把锁才能达到有效的目的
@@ -144,10 +160,56 @@ class ThreadImplementsCallable implements Callable {
 
 class ThreadImplementsCallable1 implements Callable {
     public synchronized Object call() throws Exception {
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 5; i++) {
             Thread.sleep(100);
             System.out.println(Thread.currentThread().getName() + " synchronize方法 " + ThreadExtends.testInt2++);
         }
         return 1;
+    }
+}
+
+
+//wait()，notify(),notifyAll()的应用例子
+
+class Thread1 implements Callable {
+    @Override
+    public Object call() throws Exception {
+        for (int i = 0; i < 5; i++) {
+            synchronized (ThreadExtends.object1) {
+                ThreadExtends.object1.notify();
+                Thread.sleep(200);
+                System.out.println(i + "this A =" + ThreadExtends.testInt3++);
+                ThreadExtends.object1.wait();
+            }
+        }
+        
+        //仅用
+        //双方最后的末尾都执行wait()，这导致其中一个不会被唤醒，下方代码表示唤醒被wait的对象。
+        synchronized (ThreadExtends.object1) { ThreadExtends.object1.notify();}
+        System.out.println("轮调A结束");
+        return null;
+    }
+}
+
+class Thread2 implements Runnable {
+    @Override
+    public void run() {
+        for (int i = 0; i < 5; i++) {
+            synchronized (ThreadExtends.object1) {
+                ThreadExtends.object1.notify();
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println(i + "this B =" + ThreadExtends.testInt3++);
+                try {
+                    ThreadExtends.object1.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        System.out.println("轮调B结束");
     }
 }
