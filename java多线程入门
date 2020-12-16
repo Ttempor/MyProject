@@ -18,7 +18,7 @@
 //包代码时，锁要自己给，写法为synchronized(锁){};
 //修饰方法时，方法执行完锁自动释放，包代码时，执行完包住的代码后，锁会自动释放
 
-//关键字: volatile -> 修饰属性，不适用于非原子操作，如{volatile int i = 0 ; i++}中的i++ 等运算。
+//关键字: volatile -> 修饰属性，不适用于非原子操作，如{volatile int i = 0 ; i++}中的i++ 等运算。保证有序性，可见性。
 
 //ReentrantLock类对象，使用该对象的lock()方法进行上锁，锁用调lock()方法的对象充当，需要手动调用unlock()释放锁。ReentrantLock的构造器有个Boolean型的参数，不写默认为fasle，代表是不公平的锁。
 
