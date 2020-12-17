@@ -21,7 +21,7 @@
 
 //关键字: volatile -> 修饰属性，不适用于非原子操作，如{volatile int i = 0 ; i++}中的i++ 等运算。保证有序性，可见性。
 
-//ReentrantLock类对象，使用该对象的lock()方法进行上锁，锁用调lock()方法的对象充当，需要手动调用unlock()释放锁。ReentrantLock的构造器有个Boolean型的参数，不写默认为fasle，代表是不公平的锁。
+//ReentrantLock类对象，使用该对象的lock()方法进行上锁(非同步监视器，锁是打比方)，锁用调lock()方法的对象充当，需要手动调用unlock()释放锁。ReentrantLock的构造器有个Boolean型的参数，不写默认为fasle，代表是不公平的锁。
 
 //Object类中有wait(),notify(),notifyAll()三个方法，是可以用来进行不同线程间的通信的，例子 -> 生产者消费者的问题
 //上面三种方法是放在synchronized里面才能调用，而且只能用synchronized的锁（A锁）来调用，A锁调用wait()后自动释放锁，notify()随机唤醒一个被A锁wait()的线程。notifyAll()唤醒全部线程。
