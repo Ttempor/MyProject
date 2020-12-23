@@ -1,3 +1,4 @@
+package javaProject2;
 import java.util.Scanner;
 
 public class InputTool {
@@ -35,6 +36,7 @@ public class InputTool {
                     temp = Integer.parseInt(t);
                 } else {
                     temp = scanner.nextInt();
+ 
                     t = scanner.nextLine();
                 }
 
@@ -49,7 +51,7 @@ public class InputTool {
                 System.out.println("请输入数字100以内，岁数范围在1~100之间");
                 continue;
             }
-            return t;
+            return String.valueOf(temp);
         }
 
     }

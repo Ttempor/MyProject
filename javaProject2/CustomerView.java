@@ -1,3 +1,4 @@
+package javaProject2;
 public class CustomerView {
     CustomrControl customrControl;
     /**
@@ -15,7 +16,7 @@ public class CustomerView {
             switch (selectInt) {
                 case 1 : {
                     if (customrControl.addCustomer(new Customer(InputTool.scannerCreate(), InputTool.scannerCreate()
-                    ,Integer.valueOf(InputTool.scannerGetAge(true)), InputTool.scannerCreate(), InputTool.scannerCreate()))) {
+                    ,Integer.parseInt(InputTool.scannerGetAge(true)), InputTool.scannerCreate(), InputTool.scannerCreate()))) {
                         System.out.println("增加成功，目前客户数为 " + customrControl.getTotal());
                     } else {
                         System.out.println("未知原因导致增加失败");

@@ -1,3 +1,4 @@
+package javaProject2;
 public class CustomrControl {
 
     /**
@@ -109,8 +110,8 @@ public class CustomrControl {
             return true;
         }
         System.out.println("\n-------------------------------------客户列表-------------------------------------");
-        System.out.println("编号" + "\t\t\t" + "姓名" + "\t\t\t" + "性别" + "\t\t\t" + "年龄" + "\t\t\t"
-                + "电话" + "\t\t\t" + "邮箱");
+        System.out.println("编号" + "               " + "姓名" + "               " + "性别" + "               " + "年龄"
+        					+ "               " + "电话" + "               " + "邮箱");
 
         //若出错则抓异常，好让我知道哪里错
         try {
@@ -149,7 +150,7 @@ public class CustomrControl {
      * @param s
      */
     private void stringFormat(String s) {
-        int a = 0;
+        int a = -2;
         int b = 0;
         for (int i = 0; i < s.length(); i++) {
             if (s.charAt(i) > 128 || s.charAt(i) < 0) {
@@ -158,6 +159,9 @@ public class CustomrControl {
                     b = 1;
                 }
             }
+        }
+        if(a > 0) {
+        	a = a * 9 / 20;
         }
         //上面的for检测中文，若有中文，则下面的for少添加一个空格
         for (; ; ) {

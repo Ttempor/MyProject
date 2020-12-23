@@ -1,3 +1,5 @@
+package javaProject2;
+
 public class Customer {
     public Customer() {
 
